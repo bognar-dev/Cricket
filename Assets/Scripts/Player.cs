@@ -23,7 +23,7 @@ public class Player : MonoBehaviour
         animator = GetComponent<Animator>(); // referennce out animator
         aimTargetInitialPosition = aimTarget.position; // initialise the aim position to the center( where we placed it in the editor )
         shotManager = GetComponent<ShotManager>(); // accesing our shot manager component 
-        currentShot = shotManager.topSpin; // defaulting our current shot as topspin
+        //currentShot = shotManager.topSpin; // defaulting our current shot as topspin
     }
 
     public void Update()
