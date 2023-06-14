@@ -7,28 +7,34 @@ public class Player : MonoBehaviour
     public Transform aimTarget; // the target where we aim to land the ball
     public float speed = 3f; // move speed
     public float force = 13; // ball impact force
-    public float hittingAngle = 10;
+
     bool hitting; // boolean to know if we are hitting the ball or not 
 
     public Transform ball; // the ball 
+    Animator animator;
 
-    private Vector3 aimTargetInitialPosition;
-    // Start is called before the first frame update
-    void Start()
+    Vector3 aimTargetInitialPosition; // initial position of the aiming gameObject which is the center of the opposite court
+
+    ShotManager shotManager; // reference to the shotmanager component
+    Shot currentShot; // the current shot we are playing to acces it's attributes
+
+    private void Start()
     {
-        aimTargetInitialPosition = aimTarget.position;
+        animator = GetComponent<Animator>(); // referennce out animator
+        aimTargetInitialPosition = aimTarget.position; // initialise the aim position to the center( where we placed it in the editor )
+        shotManager = GetComponent<ShotManager>(); // accesing our shot manager component 
+        currentShot = shotManager.topSpin; // defaulting our current shot as topspin
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Update()
     {
-        float horizontalMovement = Input.GetAxisRaw("Horizontal"); // get the horizontal axis of the keyboard
-        float verticalMovement = - Input.GetAxisRaw("Vertical"); // get the vertical axis of the keyboard
+        float h = Input.GetAxisRaw("Horizontal"); // get the horizontal axis of the keyboard
+        float v = -Input.GetAxisRaw("Vertical"); // get the vertical axis of the keyboard
 
         if (Input.GetKeyDown(KeyCode.F)) 
         {
             hitting = true; // we are trying to hit the ball and aim where to make it land
-           
+            currentShot = shotManager.topSpin; // set our current shot to top spin
         }
         else if (Input.GetKeyUp(KeyCode.F))
         {
@@ -38,6 +44,7 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             hitting = true; // we are trying to hit the ball and aim where to make it land
+            currentShot = shotManager.flat; // set our current shot to top spin
         }
         else if (Input.GetKeyUp(KeyCode.E))
         {
@@ -48,29 +55,29 @@ public class Player : MonoBehaviour
 
         if (hitting)  // if we are trying to hit the ball
         {
-            aimTarget.Translate(new Vector3(horizontalMovement, 0, 0) * (speed * 2 * Time.deltaTime)); 
+            aimTarget.Translate(new Vector3(v, 0, h) * (speed * 2 * Time.deltaTime)); //translate the aiming gameObject on the court horizontallly
         }
 
 
-        if ((horizontalMovement != 0 || verticalMovement != 0) && !hitting) // if we want to move and we are not hitting the ball
+        if ((h != 0 || v != 0) && !hitting) // if we want to move and we are not hitting the ball
         {
-            transform.Translate(new Vector3(verticalMovement, 0, horizontalMovement) * (speed * Time.deltaTime));
+            transform.Translate(new Vector3(v, 0, h) * (speed * Time.deltaTime)); // move on the court
         }
-
-
 
     }
-    
+
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Ball")) // if we collide with the ball 
         {
             Vector3 dir = aimTarget.position - transform.position; // get the direction to where we want to send the ball
-            other.GetComponent<Rigidbody>().velocity = dir.normalized  + new Vector3(0, hittingAngle, speed);
-            //add force to the ball plus some upward force according to the shot being played
-            
-           
-            aimTarget.position = aimTargetInitialPosition; // reset the position of the aiming gameObject to it's original position ( center)
+            other.GetComponent<Rigidbody>().velocity = dir.normalized * force + new Vector3(0, 10, 0);
+            //add force to the ball plus some upward force according to the shot being player
+            Vector3 ballDir = ball.position - transform.position; // get the direction of the ball compared to us to know if it is
+            // otherwise play a backhand animation 
+            animator.Play(ballDir.x >= 0 ? "forehand" : "backhand");
+            aimTarget.position = aimTargetInitialPosition;
 
         }
     }
